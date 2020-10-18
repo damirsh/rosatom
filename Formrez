@@ -1,0 +1,79 @@
+
+declare @g uniqueidentifier
+declare @b uniqueidentifier
+declare @getdatestart nvarchar(800) 
+declare @getdateend nvarchar(800)
+
+declare @name nvarchar(800),
+declare @datestart datetime,
+declare @stoimostRanshe double,
+declare @stoimostPozje double,
+declare @dlitnorm number,
+declare @dlitmin number,
+declare @stoimumendlit double,
+declare @ДатаФИНИШ datetime,
+declare @rafДатаСтарта datetime,
+declare @id number,
+declare @stoimostrab double,
+declare @summaelemrabot double
+
+/*
+set @getdatestart ='01.10.2020 18:30:52', 'DD.MM.YYYY HH24:MI:SS'
+set @getdateend ='20.10.2020 18:30:52', 'DD.MM.YYYY HH24:MI:SS'*/
+
+declare cur cursor for
+SELECT ran.id,ran.Название,ran.ДатаСтарта,ran.СтоимостьДеньРаньше, ran.СтоимостьДеньПозже,ran.ДлитНорм,ran.ДлитМин,ran.СтоимостьУменДлит,raf.ДатаФИНИШ,raf.ДатаСтарта
+  FROM [rosatom].[dbo].[1Работы_анализ_план] ran
+  join 3Связи_анализ_разработка san on ran.id_анализ=san.Id
+  join 2Работы_разработк_план rrp on san.id_анализ=rrp.Id
+ join 6Работы_анализ_факт raf on ran.ДатаСтарта=raf.ДатаСтарта
+  
+open cur
+fetch next from cur into @name,@datestart,@stoimostRanshe,@stoimostPozje,@dlitnorm,@dlitmin,@stoimumendlit
+while @@FETCH_STATUS=0
+begin
+		
+	
+	--Обработка данных
+	
+	if(@datestart-@rafДатаСтарта>0)
+	
+	    if(@dlitnmin>=(@datestart-@rafДатаСтарта) && @dlitnnorm<=(@datestart-@rafДатаСтарта))
+		  if (@stoimumendlit<>-1)
+			@stoimumendlit=@stoimumendlit*@datestart-@rafДатаСтарта
+		endif
+		
+	
+		
+		--вывод во временную таблицу факта
+		insert into rosatom.dbo.2Работы_разработк_план(id,Название,ДатаСтарта,СтоимостьДеньРаньше, СтоимостьДеньПозже,ДлитНорм,ДлитМин,СтоимостьУменДлит,ДатаФИНИШ,stoimostrab,summaelemrabot)
+		@id,Название,ДатаСтарта,СтоимостьДеньРаньше, СтоимостьДеньПозже,ДлитНорм,ДлитМин,СтоимостьУменДлит,@rafДатаСтарта,@ДатаФИНИШ,@stoimostrab,@summaelemrabot)
+		
+		
+		insert into rosatom.dbo.8Sumobshrab(id,sumfactdlit,sumfactstoimost,stoimostumen)
+		select sum(@ДлитНорм),sum(@sumfactstoimost),min(@stoimumendlit) from 7Работы_анализ_факт
+		
+	fetch next from cur into @name,@datestart,@stoimostRanshe,@stoimostPozje,@dlitnorm,@dlitmin,@stoimumendlit
+end
+close cur
+deallocate cur
+go
+
+
+
+
+
+/*
+входные данные
+Дату старта	Стоимость сдвига даты старта на день раньше. Возможные значения:	Стоимость сдвига даты старта на день позже. Возможные значения:	Длительность нормальная – длительность по плану работ, измеряется в днях	Длительность минимальная, в днях. Возможные значения:	Стоимость уменьшения длительности от нормальной до минимальной. Возможные значения:
+
+02.10.2020	-1	0	10	5	50
+
+выходные данные
+дата	сдвиг раньше	сдвиг позже	длит факт		сумма
+02.10.2020	-1	0	8		400
+
+
+*/
+
+
