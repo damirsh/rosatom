@@ -49,7 +49,7 @@ begin
 		insert into rosatom.dbo.2Работы_разработк_план(id,Название,ДатаСтарта,СтоимостьДеньРаньше, СтоимостьДеньПозже,ДлитНорм,ДлитМин,СтоимостьУменДлит,ДатаФИНИШ,stoimostrab,summaelemrabot)
 		@id,Название,ДатаСтарта,СтоимостьДеньРаньше, СтоимостьДеньПозже,ДлитНорм,ДлитМин,СтоимостьУменДлит,@rafДатаСтарта,@ДатаФИНИШ,@stoimostrab,@summaelemrabot)
 		
-		
+		--общая сумма
 		insert into rosatom.dbo.8Sumobshrab(id,sumfactdlit,sumfactstoimost,stoimostumen)
 		select sum(@ДлитНорм),sum(@sumfactstoimost),min(@stoimumendlit) from 7Работы_анализ_факт
 		
